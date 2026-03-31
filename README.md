@@ -1,2 +1,2 @@
 # Stock-Analysis-Dashboard
-A Tableau dashboard to analyze stock performance of Bharti Airtel, Reliance Industries, and Tata Consultancy Services using interactive charts, designed with help of Claude AI.
+In this project uses a historical stock market dataset to build a Tableau dashboard for analyzing performance and trends. It includes visualizations such as price trends, volume analysis, and company comparisons. Claude AI was used to help design and structure the dashboard, making it more professional and interactive. The dashboard focuses on providing clear insights into stock behavior through effective visualizations.
