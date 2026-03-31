@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stock Market Analysis Dashboard — Airtel · Reliance · TCS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --card: #1a1e29;
+    --border: #252a38;
+    --airtel: #e84545;
+    --reliance: #3b9eff;
+    --tcs: #00d4a1;
+    --gold: #f5c842;
+    --text: #e8eaf0;
+    --muted: #6b7490;
+    --accent: #8b5cf6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0d0f14 0%, #1a1030 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px 24px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .header-left h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem; font-weight: 400; letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #fff 0%, #a78bfa 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-left p { color: var(--muted); font-size: 0.82rem; margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .company-pills { display: flex; gap: 10px; }
+  .pill {
+    padding: 5px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.5px;
+    border: 1px solid; cursor: pointer; transition: all 0.2s;
+  }
+  .pill-airtel  { border-color: var(--airtel);   color: var(--airtel);   }
+  .pill-reliance{ border-color: var(--reliance); color: var(--reliance); }
+  .pill-tcs     { border-color: var(--tcs);      color: var(--tcs);      }
+  .pill.active-a { background: var(--airtel);   color: #fff; }
+  .pill.active-r { background: var(--reliance); color: #fff; }
+  .pill.active-t { background: var(--tcs);      color: #fff; }
+
+  /* ── KPI STRIP ── */
+  .kpi-strip {
+    display: grid; grid-template-columns: repeat(6,1fr);
+    gap: 1px; background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .kpi {
+    background: var(--surface);
+    padding: 16px 20px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .kpi-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+  .kpi-value { font-size: 1.3rem; font-weight: 600; }
+  .kpi-sub   { font-size: 0.72rem; color: var(--muted); }
+  .kv-a { color: var(--airtel); }
+  .kv-r { color: var(--reliance); }
+  .kv-t { color: var(--tcs); }
+  .kv-g { color: var(--gold); }
+
+  /* ── EXPLANATION PANEL ── */
+  .explain-panel {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+    overflow: hidden;
+  }
+  .explain-tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .etab {
+    padding: 12px 22px; font-size: 0.8rem; font-weight: 500; cursor: pointer;
+    border-bottom: 2px solid transparent; color: var(--muted);
+    transition: all 0.2s; letter-spacing: 0.3px;
+  }
+  .etab.active { color: var(--text); border-color: var(--accent); }
+  .etab-content { display: none; padding: 22px 30px; }
+  .etab-content.active { display: block; }
+  .etab-content h3 {
+    font-family: 'DM Serif Display', serif; font-size: 1.1rem; margin-bottom: 10px;
+    color: #c4b5fd;
+  }
+  .etab-content p { font-size: 0.83rem; color: #9ca3c0; line-height: 1.7; margin-bottom: 8px; }
+  .grain-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.8rem; }
+  .grain-table th { text-align: left; padding: 7px 12px; background: var(--card); color: var(--muted); font-weight: 500; }
+  .grain-table td { padding: 7px 12px; border-top: 1px solid var(--border); color: #b0b8d0; }
+  .grain-table td:first-child { color: var(--gold); font-weight: 600; }
+  .chart-explain-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-top: 12px; }
+  .ce-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px;
+  }
+  .ce-card h4 { font-size: 0.78rem; color: var(--gold); margin-bottom: 4px; font-weight: 600; }
+  .ce-card p  { font-size: 0.75rem; color: #8892aa; line-height: 1.6; }
+  .design-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 12px; }
+  .dg-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px;
+  }
+  .dg-card h4 { font-size: 0.75rem; color: var(--accent); margin-bottom: 5px; font-weight: 600; letter-spacing: 0.3px; }
+  .dg-card p  { font-size: 0.73rem; color: #8892aa; line-height: 1.6; }
+
+ /* ── MAIN GRID ── */
+main {
+  padding: 24px 32px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* FIXED: equal layout */
+  gap: 18px;
+}
+
+/* Make all cards equal height */
+.card {
+  min-height: 320px;
+}
+
+/* Make all charts same size */
+.chart-wrap canvas {
+  width: 100% !important;
+  height: 220px !important;
+}
+
+/* Optional: full width chart (use if needed) */
+.full-width {
+  grid-column: span 2;
+}
+
+  /* ── TOP YEAR CARDS ── */
+  .top-year-card {
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 140px;
+  }
+  .ty-company { font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+  .ty-year    { font-size: 2.6rem; font-family: 'DM Serif Display', serif; line-height: 1; }
+  .ty-pct     { font-size: 1.1rem; font-weight: 700; margin-top: 6px; }
+  .ty-label   { font-size: 0.65rem; color: var(--muted); margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* ── LEGEND ── */
+  .legend { display: flex; gap: 16px; margin-bottom: 10px; }
+  .leg { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); }
+  .leg-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 1100px) {
+    main { grid-template-columns: repeat(6,1fr); }
+    .span-4 { grid-column: span 6; }
+    .span-3 { grid-column: span 3; }
+    .span-8 { grid-column: span 6; }
+    .kpi-strip { grid-template-columns: repeat(3,1fr); }
+  }
+  @media (max-width: 700px) {
+    main { grid-template-columns: 1fr; padding: 12px; }
+    .span-4,.span-6,.span-8,.span-3,.span-12 { grid-column: span 1; }
+    .chart-explain-grid, .design-grid { grid-template-columns: 1fr; }
+    header { flex-direction: column; gap: 14px; align-items: flex-start; }
+    .kpi-strip { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <div class="header-left">
+    <h1>Stock Market Analysis Dashboard</h1>
+    <p>Airtel · Reliance Industries · Tata Consultancy Services &nbsp;|&nbsp; Historical Data 1996 – 2021</p>
+  </div>
+  <div class="company-pills">
+    <span class="pill pill-airtel active-a">AIRTEL</span>
+    <span class="pill pill-reliance active-r">RELIANCE</span>
+    <span class="pill pill-tcs active-t">TCS</span>
+  </div>
+</header>
+
+<!-- ═══ KPI STRIP ═══ -->
+<div class="kpi-strip">
+  <div class="kpi">
+    <span class="kpi-label">Avg. Close — Airtel</span>
+    <span class="kpi-value kv-a">₹277.74</span>
+    <span class="kpi-sub">2002 – 2021</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Avg. Close — Reliance</span>
+    <span class="kpi-value kv-r">₹409.23</span>
+    <span class="kpi-sub">1996 – 2021</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Avg. Close — TCS</span>
+    <span class="kpi-value kv-t">₹897.51</span>
+    <span class="kpi-sub">2004 – 2021</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Best Year — Airtel</span>
+    <span class="kpi-value kv-a">2003 &nbsp;<small>+359%</small></span>
+    <span class="kpi-sub">Yearly Return</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Best Year — Reliance</span>
+    <span class="kpi-value kv-r">2006 &nbsp;<small>+129%</small></span>
+    <span class="kpi-sub">Yearly Return</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Best Year — TCS</span>
+    <span class="kpi-value kv-t">2009 &nbsp;<small>+203%</small></span>
+    <span class="kpi-sub">Yearly Return</span>
+  </div>
+</div>
+
+<!-- ═══ EXPLANATION PANEL ═══ -->
+<div class="explain-panel">
+  <div class="explain-tabs">
+    <div class="etab active" onclick="showTab('grain')">Dataset &amp; Grains</div>
+    <div class="etab" onclick="showTab('charts')">Chart Explanations</div>
+    <div class="etab" onclick="showTab('design')">Design Rationale</div>
+  </div>
+
+  <div id="tab-grain" class="etab-content active">
+    <h3>What is "Grain"?</h3>
+    <p>The <strong>grain</strong> of a dataset means the lowest level of detail — the finest unit each row represents. Think of it as "what does one row describe?" In this dataset, one row = one trading day for one company. That is the grain.</p>
+    <table class="grain-table">
+      <tr><th>Column</th><th>Grain / Level of Detail</th><th>What it means</th></tr>
+      <tr><td>Date</td><td>One calendar trading day</td><td>The exact day the trade happened; drives all time-series analysis</td></tr>
+      <tr><td>Open Price</td><td>Daily — first transaction price</td><td>The price at which the stock started trading that day</td></tr>
+      <tr><td>Close Price</td><td>Daily — last transaction price</td><td>The final price of the day; benchmark for daily performance</td></tr>
+      <tr><td>High Price</td><td>Daily — intra-day maximum</td><td>Highest price reached during the trading session</td></tr>
+      <tr><td>Low Price</td><td>Daily — intra-day minimum</td><td>Lowest price reached during the trading session</td></tr>
+      <tr><td>Volume</td><td>Daily — total shares traded</td><td>Count of shares that changed hands; indicates market interest</td></tr>
+    </table>
+  </div>
+
+  <div id="tab-charts" class="etab-content">
+    <h3>Chart-by-Chart Explanation</h3>
+    <div class="chart-explain-grid">
+      <div class="ce-card"><h4>1. Stock Price Distribution</h4><p><strong>Shows:</strong> How often the stock traded in each price bracket (histogram). <strong>Grain:</strong> Aggregated from daily Close prices into price buckets. <strong>Insight:</strong> Reveals whether a stock spent most of its life cheap or expensive; skewness indicates growth trajectory.</p></div>
+      <div class="ce-card"><h4>2. Volume Distribution</h4><p><strong>Shows:</strong> Average daily trading volume per year per company. <strong>Grain:</strong> Daily Volume aggregated to yearly average. <strong>Insight:</strong> Spikes in volume mark high-interest years (corporate events, market rallies, crises).</p></div>
+      <div class="ce-card"><h4>3. Moving Average Trend</h4><p><strong>Shows:</strong> Quarterly average closing price as a smooth trend line. <strong>Grain:</strong> Daily Close aggregated to quarterly average. <strong>Insight:</strong> Smooths noise to reveal long-term direction; crossovers signal momentum shifts.</p></div>
+      <div class="ce-card"><h4>4. Opening vs Closing Price</h4><p><strong>Shows:</strong> Yearly average Open vs Close side-by-side. <strong>Grain:</strong> Daily Open/Close aggregated to yearly mean. <strong>Insight:</strong> When Close consistently exceeds Open, intra-day buying pressure is dominant.</p></div>
+      <div class="ce-card"><h4>5. Yearly Price Change Trend</h4><p><strong>Shows:</strong> Year-on-year % return for each company. <strong>Grain:</strong> End-of-year Close prices differenced and expressed as %. <strong>Insight:</strong> Identifies boom/bust years; negative bars mark market downturns like 2008.</p></div>
+      <div class="ce-card"><h4>6. Average Price by Company</h4><p><strong>Shows:</strong> Overall historical average closing price as a bar chart. <strong>Grain:</strong> Entire dataset collapsed to a single average per company. <strong>Insight:</strong> TCS commands the highest average price, reflecting premium IT-sector valuation.</p></div>
+      <div class="ce-card"><h4>7. Trading Volume Trend</h4><p><strong>Shows:</strong> Total annual trading volume per company as an area chart. <strong>Grain:</strong> Daily Volume summed to yearly total. <strong>Insight:</strong> Falling volume over time at Reliance reflects stock splits and market maturity.</p></div>
+      <div class="ce-card"><h4>8. High–Low Price Range</h4><p><strong>Shows:</strong> Yearly intra-day price band (max High vs min Low). <strong>Grain:</strong> Daily High/Low aggregated to yearly max/min. <strong>Insight:</strong> Wider bands mean higher volatility; Reliance 2020 shows extreme range during COVID.</p></div>
+      <div class="ce-card"><h4>9. Closing Price Trend</h4><p><strong>Shows:</strong> Quarterly last-day closing price as a continuous time series. <strong>Grain:</strong> Last daily Close of each quarter. <strong>Insight:</strong> The cleanest long-term price trajectory; TCS shows the steepest post-2016 growth.</p></div>
+      <div class="ce-card"><h4>10. Top Performing Year</h4><p><strong>Shows:</strong> The single best calendar year and return for each company. <strong>Grain:</strong> Annual — one row per company distilled to the peak year. <strong>Insight:</strong> Airtel 2003 (+359%) reflects its explosive mobile telecom growth era.</p></div>
+    </div>
+  </div>
+
+  <div id="tab-design" class="etab-content">
+    <h3>Design Rationale</h3>
+    <div class="design-grid">
+      <div class="dg-card"><h4>Color Usage</h4><p>Each company has a dedicated, perceptually distinct color — Airtel: crimson red, Reliance: electric blue, TCS: emerald green. These are consistent across every chart, enabling instant cross-chart comparison without reading labels.</p></div>
+      <div class="dg-card"><h4>Layout & Structure</h4><p>A 12-column grid system organizes charts by analytical theme — distributions on top, trends in the middle, comparisons at the bottom. Wide charts span 8–12 columns for time series; compact cards span 3–4 for KPIs and highlights.</p></div>
+      <div class="dg-card"><h4>Filters & Interactivity</h4><p>Company pills at the top act as visual filters. The explanation tabs (Grain / Charts / Design) allow academic readers to toggle between the data layer and the analytical context without cluttering the visual space.</p></div>
+      <div class="dg-card"><h4>Typography & Readability</h4><p>DM Serif Display (headers) brings editorial authority; DM Sans (body) ensures clean legibility at small sizes. A dark background reduces eye strain during prolonged analysis. Muted secondary labels (#6b7490) create visual hierarchy without competing with data.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHARTS GRID ═══ -->
+<main>
+
+  <!-- 1. Stock Price Distribution -->
+  <div class="card span-4" style="--accent-line: var(--airtel)">
+    <div class="card-title">Stock Price Distribution</div>
+    <div class="card-subtitle">Grain: Daily Close → price buckets</div>
+    <div class="chart-wrap"><canvas id="c1" height="200"></canvas></div>
+  </div>
+
+  <!-- 2. Volume Distribution -->
+  <div class="card span-4" style="--accent-line: var(--reliance)">
+    <div class="card-title">Volume Distribution</div>
+    <div class="card-subtitle">Grain: Daily Volume → yearly average</div>
+    <div class="chart-wrap"><canvas id="c2" height="200"></canvas></div>
+  </div>
+
+  <!-- 10. Top Performing Year — 3 mini cards -->
+  <div class="card span-4" style="--accent-line: var(--gold); padding:18px 16px;">
+    <div class="card-title" style="margin-bottom:14px">Top Performing Year</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;height:calc(100% - 40px);">
+      <div class="top-year-card">
+        <div>
+          <div class="ty-company kv-a">Airtel</div>
+          <div class="ty-year kv-a">2003</div>
+          <div class="ty-pct" style="color:#f5c842">+358.95%</div>
+          <div class="ty-label">Annual Return</div>
+        </div>
+      </div>
+      <div class="top-year-card">
+        <div>
+          <div class="ty-company kv-r">Reliance</div>
+          <div class="ty-year kv-r">2006</div>
+          <div class="ty-pct" style="color:#f5c842">+128.61%</div>
+          <div class="ty-label">Annual Return</div>
+        </div>
+      </div>
+      <div class="top-year-card">
+        <div>
+          <div class="ty-company kv-t">TCS</div>
+          <div class="ty-year kv-t">2009</div>
+          <div class="ty-pct" style="color:#f5c842">+203.01%</div>
+          <div class="ty-label">Annual Return</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Moving Average Trend -->
+  <div class="card span-12" style="--accent-line: #8b5cf6">
+    <div class="card-title">Moving Average Trend (Quarterly Avg. Close)</div>
+    <div class="card-subtitle">Grain: Daily Close → quarterly mean</div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--airtel)"></div>Airtel</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--reliance)"></div>Reliance</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--tcs)"></div>TCS</div>
+    </div>
+    <div class="chart-wrap"><canvas id="c3" height="100"></canvas></div>
+  </div>
+
+  <!-- 4. Open vs Close -->
+  <div class="card span-6" style="--accent-line: var(--tcs)">
+    <div class="card-title">Opening vs Closing Price</div>
+    <div class="card-subtitle">Grain: Daily Open/Close → yearly average</div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:#facc15"></div>Open</div>
+      <div class="leg"><div class="leg-dot" style="background:#a78bfa"></div>Close</div>
+    </div>
+    <div class="chart-wrap"><canvas id="c4" height="180"></canvas></div>
+  </div>
+
+  <!-- 5. Yearly Price Change -->
+  <div class="card span-6" style="--accent-line: var(--gold)">
+    <div class="card-title">Yearly Price Change Trend (%)</div>
+    <div class="card-subtitle">Grain: End-of-year Close, year-on-year % change</div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--airtel)"></div>Airtel</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--reliance)"></div>Reliance</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--tcs)"></div>TCS</div>
+    </div>
+    <div class="chart-wrap"><canvas id="c5" height="180"></canvas></div>
+  </div>
+
+  <!-- 6. Average Price by Company -->
+  <div class="card span-3" style="--accent-line: var(--reliance)">
+    <div class="card-title">Avg. Price by Company</div>
+    <div class="card-subtitle">Grain: All-time mean close</div>
+    <div class="chart-wrap"><canvas id="c6" height="260"></canvas></div>
+  </div>
+
+  <!-- 7. Volume Trend -->
+  <div class="card span-9" style="--accent-line: var(--airtel)">
+    <div class="card-title">Trading Volume Trend (Yearly Total)</div>
+    <div class="card-subtitle">Grain: Daily Volume → yearly sum</div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--airtel)"></div>Airtel</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--reliance)"></div>Reliance</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--tcs)"></div>TCS</div>
+    </div>
+    <div class="chart-wrap"><canvas id="c7" height="130"></canvas></div>
+  </div>
+
+  <!-- 8. High-Low Range -->
+  <div class="card span-6" style="--accent-line: #f97316">
+    <div class="card-title">High–Low Price Range (Yearly)</div>
+    <div class="card-subtitle">Grain: Daily High/Low → yearly max/min</div>
+    <div class="chart-wrap"><canvas id="c8" height="180"></canvas></div>
+  </div>
+
+  <!-- 9. Closing Price Trend -->
+  <div class="card span-6" style="--accent-line: var(--tcs)">
+    <div class="card-title">Closing Price Trend (Quarterly)</div>
+    <div class="card-subtitle">Grain: Last daily Close of each quarter</div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--airtel)"></div>Airtel</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--reliance)"></div>Reliance</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--tcs)"></div>TCS</div>
+    </div>
+    <div class="chart-wrap"><canvas id="c9" height="180"></canvas></div>
+  </div>
+
+</main>
+
+<script>
+/* ─── DATA ─── */
+const DATA = {"price_dist":{"airtel":{"counts":[576,283,233,144,1025,1322,673,202,122,73],"edges":[8.9,68.5,127.4,186.4,245.4,304.3,363.3,422.3,481.2,540.2,599.2]},"reliance":{"counts":[2586,1410,1275,222,188,234,125,19,63,56],"edges":[9.7,243.3,474.5,705.8,937.0,1168.3,1399.5,1630.8,1862.0,2093.3,2324.6]},"tcs":{"counts":[1418,651,154,566,551,83,286,243,21,55],"edges":[108.7,393.4,675.3,957.2,1239.1,1521.0,1802.9,2084.8,2366.7,2648.6,2930.5]}},"vol_dist":{"airtel":{"2002":566234,"2003":1606560,"2004":3514163,"2005":2944001,"2006":502806,"2007":731767,"2008":1722362,"2009":1821020,"2010":1010362,"2011":505009,"2012":504828,"2013":409806,"2014":338150,"2015":300397,"2016":322512,"2017":2520153,"2018":730831,"2019":542323,"2020":1399562},"reliance":{"1996":178811264,"1997":125638514,"1998":45592250,"1999":55154529,"2000":44706236,"2001":25038152,"2002":20906136,"2003":33791853,"2004":43974474,"2005":36581250,"2006":23171203,"2007":11714995,"2008":18038256,"2009":16915126,"2010":9571530,"2011":8886888,"2012":7155312,"2013":6374653,"2014":6583226,"2015":7012442,"2016":7238699,"2017":8481172,"2018":7903144,"2019":9031505,"2020":17856658},"tcs":{"2004":9772105,"2005":6029445,"2006":4024858,"2007":4297829,"2008":5272022,"2009":6413981,"2010":3360979,"2011":3325108,"2012":2723455,"2013":2721591,"2014":2372780,"2015":2358312,"2016":2191959,"2017":2210239,"2018":3452862,"2019":3038498,"2020":3996893}},"ma_data":{"airtel":{"2002Q1":19.37,"2002Q2":16.09,"2002Q3":14.74,"2002Q4":11.86,"2003Q1":12.18,"2003Q2":16.48,"2003Q3":25.12,"2003Q4":38.93,"2004Q1":63.56,"2004Q2":70.17,"2004Q3":67.25,"2004Q4":79.21,"2005Q1":98.73,"2005Q2":100.86,"2005Q3":138.24,"2005Q4":158.43,"2006Q1":168.79,"2006Q2":176.49,"2006Q3":187.22,"2006Q4":259.48,"2007Q1":331.92,"2007Q2":375.99,"2007Q3":401.49,"2007Q4":440.6,"2008Q1":394.03,"2008Q2":380.3,"2008Q3":362.68,"2008Q4":314.22,"2009Q1":285.87,"2009Q2":353.89,"2009Q3":376.52,"2009Q4":292.64,"2010Q1":280.36,"2010Q2":258.07,"2010Q3":296.97,"2010Q4":309.86,"2011Q1":306.7,"2011Q2":343.58,"2011Q3":365.82,"2011Q4":341.44,"2012Q1":316.88,"2012Q2":284.15,"2012Q3":257.97,"2012Q4":269.7,"2013Q1":296.63,"2013Q2":274.57,"2013Q3":294.13,"2013Q4":308.97,"2014Q1":282.18,"2014Q2":306.67,"2014Q3":343.25,"2014Q4":350.49,"2015Q1":335.67,"2015Q2":373.39,"2015Q3":355.82,"2015Q4":309.4,"2016Q1":296.02,"2016Q2":324.96,"2016Q3":317.28,"2016Q4":285.81,"2017Q1":315.71,"2017Q2":331.08,"2017Q3":374.57,"2017Q4":449.52,"2018Q1":410.67,"2018Q2":352.5,"2018Q3":338.34,"2018Q4":281.81,"2019Q1":292.36,"2019Q2":335.34,"2019Q3":350.32,"2019Q4":408.17,"2020Q1":494.71,"2020Q2":538.0,"2020Q3":528.97,"2020Q4":465.95,"2021Q1":515.1},"reliance":{"1996Q1":16.02,"1996Q2":18.44,"1996Q3":15.97,"1996Q4":14.94,"1997Q1":20.59,"1997Q2":23.84,"1997Q3":27.65,"1997Q4":30.01,"1998Q1":25.51,"1998Q2":27.13,"1998Q3":19.91,"1998Q4":17.89,"1999Q1":20.74,"1999Q2":24.7,"1999Q3":28.98,"1999Q4":36.33,"2000Q1":47.08,"2000Q2":51.58,"2000Q3":54.26,"2000Q4":50.39,"2001Q1":60.91,"2001Q2":56.28,"2001Q3":47.86,"2001Q4":44.11,"2002Q1":48.52,"2002Q2":44.22,"2002Q3":39.85,"2002Q4":41.88,"2003Q1":44.82,"2003Q2":45.26,"2003Q3":58.48,"2003Q4":75.83,"2004Q1":88.32,"2004Q2":76.29,"2004Q3":73.58,"2004Q4":82.64,"2005Q1":84.9,"2005Q2":87.38,"2005Q3":110.93,"2005Q4":127.42,"2006Q1":174.7,"2006Q2":240.51,"2006Q3":267.21,"2006Q4":310.42,"2007Q1":337.3,"2007Q2":403.73,"2007Q3":476.28,"2007Q4":682.05,"2008Q1":637.64,"2008Q2":609.51,"2008Q3":529.8,"2008Q4":327.04,"2009Q1":322.32,"2009Q2":498.56,"2009Q3":500.84,"2009Q4":525.52,"2010Q1":521.06,"2010Q2":526.28,"2010Q3":504.03,"2010Q4":523.43,"2011Q1":492.24,"2011Q2":474.41,"2011Q3":407.94,"2011Q4":401.42,"2012Q1":392.02,"2012Q2":359.75,"2012Q3":386.83,"2012Q4":406.44,"2013Q1":427.88,"2013Q2":401.87,"2013Q3":431.76,"2013Q4":435.78,"2014Q1":425.81,"2014Q2":512.57,"2014Q3":498.51,"2014Q4":472.66,"2015Q1":436.55,"2015Q2":451.61,"2015Q3":467.9,"2015Q4":475.18,"2016Q1":500.65,"2016Q2":493.18,"2016Q3":515.02,"2016Q4":518.78,"2017Q1":571.78,"2017Q2":683.11,"2017Q3":792.73,"2017Q4":908.76,"2018Q1":924.71,"2018Q2":955.8,"2018Q3":1174.89,"2018Q4":1111.66,"2019Q1":1236.4,"2019Q2":1326.11,"2019Q3":1241.79,"2019Q4":1484.08,"2020Q1":1355.57,"2020Q2":1466.49,"2020Q3":2085.78,"2020Q4":2036.36,"2021Q1":1987.5},"tcs":{"2004Q3":125.78,"2004Q4":149.35,"2005Q1":169.46,"2005Q2":156.83,"2005Q3":168.66,"2005Q4":191.91,"2006Q1":215.27,"2006Q2":229.76,"2006Q3":240.86,"2006Q4":278.7,"2007Q1":316.99,"2007Q2":303.86,"2007Q3":272.69,"2007Q4":259.15,"2008Q1":222.75,"2008Q2":230.87,"2008Q3":201.6,"2008Q4":133.17,"2009Q1":125.52,"2009Q2":166.72,"2009Q3":254.02,"2009Q4":328.45,"2010Q1":384.41,"2010Q2":383.63,"2010Q3":426.85,"2010Q4":527.41,"2011Q1":565.84,"2011Q2":580.29,"2011Q3":530.13,"2011Q4":557.82,"2012Q1":586.31,"2012Q2":604.85,"2012Q3":641.77,"2012Q4":643.38,"2013Q1":713.17,"2013Q2":735.2,"2013Q3":904.65,"2013Q4":1031.5,"2014Q1":1098.03,"2014Q2":1095.14,"2014Q3":1266.68,"2014Q4":1285.97,"2015Q1":1283.79,"2015Q2":1275.26,"2015Q3":1284.6,"2015Q4":1229.79,"2016Q1":1169.25,"2016Q2":1267.8,"2016Q3":1257.29,"2016Q4":1142.62,"2017Q1":1195.02,"2017Q2":1211.43,"2017Q3":1236.66,"2017Q4":1308.04,"2018Q1":1467.22,"2018Q2":1711.16,"2018Q3":2015.43,"2018Q4":1946.39,"2019Q1":1968.45,"2019Q2":2155.44,"2019Q3":2164.81,"2019Q4":2113.81,"2020Q1":2059.55,"2020Q2":1940.66,"2020Q3":2291.97,"2020Q4":2739.78,"2021Q1":2928.25}},"ovc":{"airtel":{"Open":{"2002":15.01,"2003":23.38,"2004":70.17,"2005":123.98,"2006":198.38,"2007":388.61,"2008":364.49,"2009":330.82,"2010":287,"2011":339.36,"2012":283.07,"2013":293.88,"2014":321.1,"2015":344.52,"2016":306.62,"2017":367.39,"2018":347.2,"2019":346.61,"2020":508.08,"2021":510.6},"Close":{"2002":14.85,"2003":23.31,"2004":70,"2005":123.76,"2006":197.87,"2007":388.06,"2008":363.53,"2009":328.99,"2010":286.49,"2011":339.47,"2012":282.33,"2013":293.51,"2014":320.31,"2015":343.86,"2016":306.14,"2017":367.9,"2018":345.65,"2019":346.58,"2020":506.84,"2021":515.1}},"reliance":{"Open":{"2010":519.77,"2015":458.11,"2020":1746.86},"Close":{"2010":518.54,"2015":457.86,"2020":1743.36}},"tcs":{"Open":{"2010":431.22,"2015":1270.95,"2020":2262.48},"Close":{"2010":431.28,"2015":1268.71,"2020":2261.55}}},"ypc":{"airtel":{"2003":358.95,"2004":105.14,"2005":60.34,"2006":81.91,"2007":58.15,"2008":-28.1,"2009":-9.94,"2010":11.3,"2011":-4.32,"2012":-7.61,"2013":4.31,"2014":6.78,"2015":-3.67,"2016":-10.16,"2017":73.37,"2018":-40.9,"2019":58.68,"2020":11.74},"reliance":{"1997":62.3,"1998":-28.68,"1999":94.86,"2000":45.44,"2001":-9.66,"2002":-2.69,"2003":92.26,"2004":-6.83,"2005":66.63,"2006":128.61,"2007":126.96,"2008":-57.24,"2009":65.35,"2010":3.88,"2011":-34.55,"2012":21.16,"2013":6.63,"2014":-0.45,"2015":13.85,"2016":6.68,"2017":70.19,"2018":21.74,"2019":35.03,"2020":31.13},"tcs":{"2005":27.51,"2006":43.52,"2007":-11.83,"2008":-55.64,"2009":203.01,"2010":60.99,"2011":-0.43,"2012":8.2,"2013":72.96,"2014":17.78,"2015":-4.74,"2016":-2.93,"2017":14.19,"2018":40.16,"2019":14.19,"2020":32.43}},"avg_price":{"airtel":277.74,"reliance":409.23,"tcs":897.51},"vol_trend":{"airtel":{"2002":120041621,"2003":403246620,"2004":885569029,"2005":730112231,"2006":124192976,"2007":181478172,"2008":421978793,"2009":433402792,"2010":252590604,"2011":124232298,"2012":123682830,"2013":101631890,"2014":82508502,"2015":73897782,"2016":79337934,"2017":624997935,"2018":179784336,"2019":131242188,"2020":349890507},"reliance":{"1996":44524004625,"1997":30404520381,"1998":11261285820,"1999":13733477774,"2000":11176559016,"2001":6209461605,"2002":5247440235,"2003":8481755090,"2004":11081567475,"2005":9072150097,"2006":5723287201,"2007":2905318804,"2008":4437410936,"2009":4025799880,"2010":2392882480,"2011":2186174508,"2012":1753051440,"2013":1580914000,"2014":1606307126,"2015":1725060776,"2016":1780720018,"2017":2103330561,"2018":1944173360,"2019":2185624259,"2020":4464164542},"tcs":{"2004":869717312,"2005":1495302344,"2006":994139844,"2007":1065861528,"2008":1296917336,"2009":1526527402,"2010":840244724,"2011":817976452,"2012":667246580,"2013":674954682,"2014":578958206,"2015":580144728,"2016":539221804,"2017":548139150,"2018":849403971,"2019":735316589,"2020":999223368}},"hl_range":{"airtel":{"High":{"2002":21.57,"2003":51.59,"2004":107.86,"2005":173.04,"2006":299.22,"2007":527.39,"2008":463.59,"2009":454.41,"2010":345.63,"2011":408.23,"2012":368.03,"2013":342.87,"2014":385.47,"2015":415.35,"2016":353.34,"2017":518.67,"2018":497.79,"2019":485.75,"2020":611.7,"2021":516.25},"Low":{"2002":9.87,"2003":9.48,"2004":48.54,"2005":88.33,"2006":142.38,"2007":249.51,"2008":222.16,"2009":210.68,"2010":233.17,"2011":279.3,"2012":218.94,"2013":245.06,"2014":258.97,"2015":279.67,"2016":259.15,"2017":274.99,"2018":254.29,"2019":269.25,"2020":381.05,"2021":508.25}},"reliance":{"High":{"2006":328.99,"2007":747.25,"2008":824.5,"2009":633.75,"2010":574.95,"2015":533.92,"2020":2369.35},"Low":{"2006":134.81,"2007":312.05,"2008":232.5,"2009":266.25,"2010":457.5,"2015":398.23,"2020":875.65}},"tcs":{"High":{"2006":308.61,"2008":269.25,"2009":374.5,"2010":590.0,"2015":1406.05,"2018":2275.95,"2020":2952.0},"Low":{"2006":181.41,"2008":103.84,"2009":109.84,"2010":342.62,"2015":1157.62,"2018":1310.1,"2020":1506.05}}},"close_trend":{"airtel":{"2002Q1":17.95,"2003Q1":12.99,"2004Q1":70.98,"2005Q1":94.94,"2006Q1":189.5,"2007Q1":350.31,"2008Q1":379.18,"2009Q1":287.24,"2010Q1":286.32,"2011Q1":328.18,"2012Q1":309.14,"2013Q1":267.87,"2014Q1":292.75,"2015Q1":361.6,"2016Q1":322.13,"2017Q1":321.25,"2018Q1":366.19,"2019Q1":303.35,"2020Q1":440.6,"2021Q1":515.1},"reliance":{"1996Q1":16.15,"1997Q1":20.52,"1998Q1":27.33,"1999Q1":20.37,"2000Q1":49.43,"2001Q1":60.84,"2002Q1":46.9,"2003Q1":43.44,"2004Q1":84.04,"2005Q1":85.29,"2006Q1":198.84,"2007Q1":342.58,"2008Q1":566.45,"2009Q1":381.19,"2010Q1":537.12,"2011Q1":524.55,"2012Q1":375.3,"2013Q1":386.45,"2014Q1":465.38,"2015Q1":413.0,"2016Q1":522.6,"2017Q1":660.45,"2018Q1":882.7,"2019Q1":1360.0,"2020Q1":1113.75,"2021Q1":1987.5},"tcs":{"2005Q1":179.01,"2006Q1":239.44,"2007Q1":308.46,"2008Q1":202.61,"2009Q1":134.64,"2010Q1":390.33,"2011Q1":591.95,"2012Q1":584.4,"2013Q1":787.88,"2014Q1":1066.57,"2015Q1":1276.97,"2016Q1":1260.15,"2017Q1":1215.9,"2018Q1":1424.57,"2019Q1":2000.3,"2020Q1":1826.1,"2021Q1":2928.25}}};
+
+const COLORS = { airtel:'#e84545', reliance:'#3b9eff', tcs:'#00d4a1' };
+const GRID = { color:'rgba(255,255,255,0.05)' };
+const TICK = { color:'#6b7490', font:{ size:10 } };
+const PLUG = {
+  legend:{ display:false },
+  tooltip:{ backgroundColor:'#1a1e29', borderColor:'#252a38', borderWidth:1,
+    titleColor:'#e8eaf0', bodyColor:'#9ca3c0', padding:10 }
+};
+
+/* ── CHART 1: Price Distribution (stacked bar) ── */
+(function(){
+  const labels = ['Airtel','Reliance','TCS'];
+  const d = DATA.price_dist;
+  const makeEdgeLabel = (edges) => edges.slice(0,-1).map((e,i)=>`${Math.round(e)}–${Math.round(edges[i+1])}`);
+  // Use first 6 buckets for readability
+  const colors6 = ['#e84545','#ff7849','#f5c842','#00d4a1','#3b9eff','#8b5cf6'];
+  const aBuckets = d.airtel.counts.slice(0,6);
+  const rBuckets = d.reliance.counts.slice(0,6);
+  const tBuckets = d.tcs.counts.slice(0,6);
+  const aEdges = makeEdgeLabel(d.airtel.edges).slice(0,6);
+  new Chart(document.getElementById('c1'),{
+    type:'bar',
+    data:{
+      labels: aEdges,
+      datasets:[
+        {label:'Airtel',  data:aBuckets, backgroundColor:COLORS.airtel+'cc'},
+        {label:'Reliance',data:rBuckets.map((v,i)=>v*0.1), backgroundColor:COLORS.reliance+'cc'},
+        {label:'TCS',     data:tBuckets, backgroundColor:COLORS.tcs+'cc'},
+      ]
+    },
+    options:{
+      responsive:true, plugins:{...PLUG,legend:{display:false}},
+      scales:{
+        x:{grid:GRID, ticks:{...TICK,maxRotation:45}},
+        y:{grid:GRID, ticks:TICK, title:{display:true,text:'Frequency',color:'#6b7490',font:{size:10}}}
+      }
+    }
+  });
+})();
+
+/* ── CHART 2: Volume Distribution (bar per company, select years) ── */
+(function(){
+  const years=['2004','2008','2009','2012','2015','2017','2019','2020'];
+  const a = years.map(y=>DATA.vol_dist.airtel[y]||0);
+  const r = years.map(y=>(DATA.vol_dist.reliance[y]||0)/100);  // scale down
+  const t = years.map(y=>DATA.vol_dist.tcs[y]||0);
+  new Chart(document.getElementById('c2'),{
+    type:'bar',
+    data:{
+      labels:years,
+      datasets:[
+        {label:'Airtel',   data:a, backgroundColor:COLORS.airtel+'bb'},
+        {label:'TCS',      data:t, backgroundColor:COLORS.tcs+'bb'},
+      ]
+    },
+    options:{
+      responsive:true, plugins:PLUG,
+      scales:{
+        x:{grid:GRID,ticks:TICK},
+        y:{grid:GRID,ticks:TICK,title:{display:true,text:'Avg Daily Volume',color:'#6b7490',font:{size:10}}}
+      }
+    }
+  });
+})();
+
+/* ── CHART 3: Moving Average Trend (quarterly) ── */
+(function(){
+  // Union of all quarterly keys, show every other for readability
+  const allKeys = Array.from(new Set([
+    ...Object.keys(DATA.ma_data.airtel),
+    ...Object.keys(DATA.ma_data.reliance),
+    ...Object.keys(DATA.ma_data.tcs)
+  ])).sort();
+  // Sample every 2nd
+  const keys = allKeys.filter((_,i)=>i%2===0);
+  const a = keys.map(k=>DATA.ma_data.airtel[k]||null);
+  const r = keys.map(k=>DATA.ma_data.reliance[k]||null);
+  const t = keys.map(k=>DATA.ma_data.tcs[k]||null);
+  new Chart(document.getElementById('c3'),{
+    type:'line',
+    data:{
+      labels:keys,
+      datasets:[
+        {label:'Airtel',  data:a, borderColor:COLORS.airtel,   borderWidth:2, pointRadius:0, tension:0.4, spanGaps:true, fill:false},
+        {label:'Reliance',data:r, borderColor:COLORS.reliance, borderWidth:2, pointRadius:0, tension:0.4, spanGaps:true, fill:false},
+        {label:'TCS',     data:t, borderColor:COLORS.tcs,      borderWidth:2, pointRadius:0, tension:0.4, spanGaps:true, fill:false},
+      ]
+    },
+    options:{
+      responsive:true, plugins:PLUG,
+      scales:{
+        x:{grid:GRID,ticks:{...TICK,maxTicksLimit:12}},
+        y:{grid:GRID,ticks:TICK,title:{display:true,text:'Avg Close (₹)',color:'#6b7490',font:{size:10}}}
+      }
+    }
+  });
+})();
+
+/* ── CHART 4: Open vs Close (Airtel yearly) ── */
+(function(){
+  const yrs = Object.keys(DATA.ovc.airtel.Open).filter((_,i)=>i%2===0);
+  const opens  = yrs.map(y=>DATA.ovc.airtel.Open[y]);
+  const closes = yrs.map(y=>DATA.ovc.airtel.Close[y]);
+  new Chart(document.getElementById('c4'),{
+    type:'bar',
+    data:{
+      labels:yrs,
+      datasets:[
+        {label:'Open',  data:opens,  backgroundColor:'#facc1599'},
+        {label:'Close', data:closes, backgroundColor:'#a78bfa99'},
+      ]
+    },
+    options:{
+      responsive:true, plugins:{...PLUG,legend:{display:false}},
+      scales:{
+        x:{grid:GRID,ticks:TICK},
+        y:{grid:GRID,ticks:TICK,title:{display:true,text:'Price (₹) — Airtel',color:'#6b7490',font:{size:10}}}
+      }
+    }
+  });
+})();
+
+/* ── CHART 5: Yearly % Change ── */
+(function(){
+  const allYears=Array.from(new Set([
+    ...Object.keys(DATA.ypc.airtel),
+    ...Object.keys(DATA.ypc.reliance),
+    ...Object.keys(DATA.ypc.tcs)
+  ])).sort().filter(y=>y>='2003'&&y<='2020');
+  const a=allYears.map(y=>DATA.ypc.airtel[y]??null);
+  const r=allYears.map(y=>DATA.ypc.reliance[y]??null);
+  const t=allYears.map(y=>DATA.ypc.tcs[y]??null);
+  new Chart(document.getElementById('c5'),{
+    type:'bar',
+    data:{
+      labels:allYears,
+      datasets:[
+        {label:'Airtel',  data:a, backgroundColor:a.map(v=>v>=0?COLORS.airtel+'cc':'#e8454566')},
+        {label:'Reliance',data:r, backgroundColor:r.map(v=>v!==null?(v>=0?COLORS.reliance+'cc':'#3b9eff44'):null), spanGaps:true},
+        {label:'TCS',     data:t, backgroundColor:t.map(v=>v!==null?(v>=0?COLORS.tcs+'cc':'#00d4a144'):null), spanGaps:true},
+      ]
+    },
+    options:{
+      responsive:true, plugins:{...PLUG,legend:{display:false}},
+      scales:{
+        x:{grid:GRID,ticks:TICK},
+        y:{grid:GRID,ticks:TICK,title:{display:true,text:'% Change',color:'#6b7490',font:{size:10}}}
+      }
+    }
+  });
+})();
+
+/* ── CHART 6: Average Price ── */
+(function(){
+  new Chart(document.getElementById('c6'),{
+    type:'bar',
+    data:{
+      labels:['Airtel','Reliance','TCS'],
+      datasets:[{
+        label:'Avg Close',
+        data:[277.74,409.23,897.51],
+        backgroundColor:[COLORS.airtel+'cc',COLORS.reliance+'cc',COLORS.tcs+'cc'],
+        borderRadius:6,
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true,
+      plugins:{...PLUG,legend:{display:false}},
+      scales:{
+        x:{grid:GRID,ticks:TICK,title:{display:true,text:'₹',color:'#6b7490',font:{size:10}}},
+        y:{grid:{display:false},ticks:{...TICK,font:{size:12,weight:'600'}}}
+      }
+    }
+  });
+})();
+
+/* ── CHART 7: Volume Trend ── */
+(function(){
+  const years=Array.from(new Set([
+    ...Object.keys(DATA.vol_trend.airtel),
+    ...Object.keys(DATA.vol_trend.reliance),
+    ...Object.keys(DATA.vol_trend.tcs)
+  ])).sort().filter(y=>y>='2002');
+  const a=years.map(y=>DATA.vol_trend.airtel[y]||null);
+  const r=years.map(y=>DATA.vol_trend.reliance[y]?DATA.vol_trend.reliance[y]/50:null);
+  const t=years.map(y=>DATA.vol_trend.tcs[y]||null);
+  new Chart(document.getElementById('c7'),{
+    type:'line',
+    data:{
+      labels:years,
+      datasets:[
+        {label:'Airtel',   data:a, borderColor:COLORS.airtel,   fill:true, backgroundColor:COLORS.airtel+'18',   borderWidth:2, pointRadius:0, tension:0.4, spanGaps:true},
+        {label:'TCS',      data:t, borderColor:COLORS.tcs,      fill:true, backgroundColor:COLORS.tcs+'18',      borderWidth:2, pointRadius:0, tension:0.4, spanGaps:true},
+        {label:'Rel/50',   data:r, borderColor:COLORS.reliance, fill:true, backgroundColor:COLORS.reliance+'18', borderWidth:2, pointRadius:0, tension:0.4, spanGaps:true},
+      ]
+    },
+    options:{
+      responsive:true, plugins:PLUG,
+      scales:{
+        x:{grid:GRID,ticks:TICK},
+        y:{grid:GRID,ticks:TICK,title:{display:true,text:'Total Volume (Rel scaled ÷50)',color:'#6b7490',font:{size:9}}}
+      }
+    }
+  });
+})();
+
+/* ── CHART 8: High-Low Range (Airtel full, others sampled) ── */
+(function(){
+  const years=Object.keys(DATA.hl_range.airtel.High);
+  const highs=years.map(y=>DATA.hl_range.airtel.High[y]);
+  const lows=years.map(y=>DATA.hl_range.airtel.Low[y]);
+  new Chart(document.getElementById('c8'),{
+    type:'line',
+    data:{
+      labels:years,
+      datasets:[
+        {label:'High',data:highs,borderColor:'#f97316',backgroundColor:'#f9731620',fill:'+1',borderWidth:2,pointRadius:3,tension:0.3},
+        {label:'Low', data:lows, borderColor:'#fb923c',backgroundColor:'#fb923c10',fill:false,borderWidth:2,pointRadius:3,tension:0.3},
+      ]
+    },
+    options:{
+      responsive:true, plugins:{...PLUG,legend:{display:false}},
+      scales:{
+        x:{grid:GRID,ticks:{...TICK,maxTicksLimit:10}},
+        y:{grid:GRID,ticks:TICK,title:{display:true,text:'Price ₹ — Airtel',color:'#6b7490',font:{size:10}}}
+      }
+    }
+  });
+})();
+
+/* ── CHART 9: Closing Price Trend (annual Q1) ── */
+(function(){
+  const aKeys=Object.keys(DATA.close_trend.airtel).sort();
+  const rKeys=Object.keys(DATA.close_trend.reliance).sort();
+  const tKeys=Object.keys(DATA.close_trend.tcs).sort();
+  const allKeys=Array.from(new Set([...aKeys,...rKeys,...tKeys])).sort();
+  const a=allKeys.map(k=>DATA.close_trend.airtel[k]||null);
+  const r=allKeys.map(k=>DATA.close_trend.reliance[k]||null);
+  const t=allKeys.map(k=>DATA.close_trend.tcs[k]||null);
+  new Chart(document.getElementById('c9'),{
+    type:'line',
+    data:{
+      labels:allKeys,
+      datasets:[
+        {label:'Airtel',  data:a, borderColor:COLORS.airtel,   borderWidth:2.5, pointRadius:3, tension:0.4, spanGaps:true},
+        {label:'Reliance',data:r, borderColor:COLORS.reliance, borderWidth:2.5, pointRadius:3, tension:0.4, spanGaps:true},
+        {label:'TCS',     data:t, borderColor:COLORS.tcs,      borderWidth:2.5, pointRadius:3, tension:0.4, spanGaps:true},
+      ]
+    },
+    options:{
+      responsive:true, plugins:{...PLUG,legend:{display:false}},
+      scales:{
+        x:{grid:GRID,ticks:{...TICK,maxTicksLimit:12}},
+        y:{grid:GRID,ticks:TICK,title:{display:true,text:'Close Price (₹)',color:'#6b7490',font:{size:10}}}
+      }
+    }
+  });
+})();
+
+/* ─── TABS ─── */
+function showTab(name){
+  document.querySelectorAll('.etab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.etab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

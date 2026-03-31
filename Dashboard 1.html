@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Airtel, Reliance & TCS — Stock Analysis Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:       #0D1117;
+    --surface:  #161B22;
+    --card:     #1C2333;
+    --border:   #30363D;
+    --airtel:   #F4A022;
+    --reliance: #3B9EE8;
+    --tcs:      #E85C7A;
+    --airtel-a: rgba(244,160,34,0.18);
+    --reliance-a:rgba(59,158,232,0.18);
+    --tcs-a:    rgba(232,92,122,0.18);
+    --text-1:   #E6EDF3;
+    --text-2:   #8B949E;
+    --text-3:   #484F58;
+    --gold:     #D4A847;
+    --green:    #3FB950;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-1);
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    background: linear-gradient(135deg, #161B22 0%, #1C2333 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-inner {
+    max-width: 1440px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-mark {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--airtel), var(--reliance));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: white;
+  }
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px; color: var(--text-1);
+  }
+  .header-title span { color: var(--gold); }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .company-pill {
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  }
+  .pill-a { background: rgba(244,160,34,0.15); color: var(--airtel); border: 1px solid rgba(244,160,34,0.3); }
+  .pill-r { background: rgba(59,158,232,0.15);  color: var(--reliance); border: 1px solid rgba(59,158,232,0.3); }
+  .pill-t { background: rgba(232,92,122,0.15);  color: var(--tcs); border: 1px solid rgba(232,92,122,0.3); }
+
+  /* ─── KPI BAR ─── */
+  .kpi-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+  }
+  .kpi-inner {
+    max-width: 1440px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(6,1fr);
+    gap: 0;
+  }
+  .kpi {
+    padding: 14px 20px;
+    border-right: 1px solid var(--border);
+  }
+  .kpi:last-child { border-right: none; }
+  .kpi-label { font-size: 10px; color: var(--text-2); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
+  .kpi-val   { font-size: 20px; font-weight: 600; color: var(--text-1); }
+  .kpi-sub   { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+  .up   { color: var(--green) !important; }
+  .down { color: var(--tcs)   !important; }
+
+  /* ─── GRID ─── */
+  .dash {
+    max-width: 1440px; margin: 0 auto;
+    padding: 24px 32px 40px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+  }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    display: flex; flex-direction: column;
+    transition: border-color 0.2s, transform 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+  .card:hover { border-color: #484F58; transform: translateY(-2px); }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  /* stagger */
+  .card:nth-child(1)  { animation-delay: 0.05s; }
+  .card:nth-child(2)  { animation-delay: 0.10s; }
+  .card:nth-child(3)  { animation-delay: 0.15s; }
+  .card:nth-child(4)  { animation-delay: 0.20s; }
+  .card:nth-child(5)  { animation-delay: 0.25s; }
+  .card:nth-child(6)  { animation-delay: 0.30s; }
+  .card:nth-child(7)  { animation-delay: 0.35s; }
+  .card:nth-child(8)  { animation-delay: 0.40s; }
+  .card:nth-child(9)  { animation-delay: 0.45s; }
+  .card:nth-child(10) { animation-delay: 0.50s; }
+
+  /* col spans */
+  .col-3  { grid-column: span 3; }
+  .col-4  { grid-column: span 4; }
+  .col-5  { grid-column: span 5; }
+  .col-6  { grid-column: span 6; }
+  .col-7  { grid-column: span 7; }
+  .col-8  { grid-column: span 8; }
+  .col-12 { grid-column: span 12; }
+
+  .card-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 16px; flex-shrink: 0;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600; color: var(--text-1);
+    letter-spacing: 0.2px;
+  }
+  .card-badge {
+    font-size: 10px; padding: 3px 8px; border-radius: 4px;
+    background: rgba(139,148,158,0.1); color: var(--text-2);
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .chart-wrap { position: relative; flex: 1; min-height: 0; }
+
+  /* ─── DONUT CARD ─── */
+  .donut-wrap {
+    display: flex; align-items: center; gap: 20px; flex: 1;
+  }
+  .donut-canvas { width: 120px !important; height: 120px !important; flex-shrink: 0; }
+  .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-name { font-size: 12px; color: var(--text-2); flex: 1; }
+  .legend-val  { font-size: 12px; font-weight: 600; color: var(--text-1); }
+
+  /* ─── TREEMAP ─── */
+  .treemap {
+    flex: 1; display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 4px;
+  }
+  .tm-cell {
+    border-radius: 8px; padding: 12px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .tm-cell:hover { opacity: 0.85; }
+  .tm-cell.big { grid-row: span 2; }
+  .tm-name { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.9); }
+  .tm-val  { font-size: 18px; font-weight: 700; color: white; }
+
+  /* ─── TOP YEAR TABLE ─── */
+  .year-table { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .year-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+  }
+  .year-rank {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px; color: var(--text-3); min-width: 24px;
+  }
+  .year-info { flex: 1; }
+  .year-company { font-size: 12px; font-weight: 600; color: var(--text-1); }
+  .year-year    { font-size: 11px; color: var(--text-2); }
+  .year-bar-wrap { flex: 2; }
+  .year-bar-bg {
+    height: 6px; border-radius: 3px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+  .year-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .year-pct { font-size: 12px; font-weight: 600; min-width: 40px; text-align: right; }
+
+  /* ─── FOOTER ─── */
+  .dash-footer {
+    text-align: center; padding: 20px;
+    font-size: 11px; color: var(--text-3);
+    border-top: 1px solid var(--border);
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="logo-mark">📈</div>
+      <span class="header-title">Airtel, Reliance <span>&</span> TCS — <em>Stock Analysis Dashboard</em></span>
+    </div>
+    <div class="header-right">
+      <span class="company-pill pill-a">Airtel</span>
+      <span class="company-pill pill-r">Reliance</span>
+      <span class="company-pill pill-t">TCS</span>
+    </div>
+  </div>
+</header>
+
+<!-- KPI BAR -->
+<div class="kpi-bar">
+  <div class="kpi-inner">
+    <div class="kpi">
+      <div class="kpi-label">Airtel Avg. Close</div>
+      <div class="kpi-val">₹342</div>
+      <div class="kpi-sub up">▲ Telecom Leader</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Reliance Avg. Close</div>
+      <div class="kpi-val">₹897</div>
+      <div class="kpi-sub up">▲ Conglomerate</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">TCS Avg. Close</div>
+      <div class="kpi-val">₹1,840</div>
+      <div class="kpi-sub up">▲ IT Services</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Peak Volume</div>
+      <div class="kpi-val">40B</div>
+      <div class="kpi-sub">Airtel 1997</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Top Year Return</div>
+      <div class="kpi-val up">+187%</div>
+      <div class="kpi-sub">Reliance 2020</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Data Range</div>
+      <div class="kpi-val">25 Yrs</div>
+      <div class="kpi-sub">1997 – 2022</div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD GRID -->
+<div class="dash">
+
+  <!-- 1. STOCK PRICE DISTRIBUTION (Donut) -->
+  <div class="card col-3">
+    <div class="card-head">
+      <div class="card-title">Stock Price Distribution</div>
+      <span class="card-badge">Donut</span>
+    </div>
+    <div class="donut-wrap">
+      <canvas id="c1" class="donut-canvas"></canvas>
+      <div class="donut-legend">
+        <div class="legend-row">
+          <div class="legend-dot" style="background:var(--airtel)"></div>
+          <span class="legend-name">Airtel</span>
+          <span class="legend-val" style="color:var(--airtel)">28%</span>
+        </div>
+        <div class="legend-row">
+          <div class="legend-dot" style="background:var(--reliance)"></div>
+          <span class="legend-name">Reliance</span>
+          <span class="legend-val" style="color:var(--reliance)">42%</span>
+        </div>
+        <div class="legend-row">
+          <div class="legend-dot" style="background:var(--tcs)"></div>
+          <span class="legend-name">TCS</span>
+          <span class="legend-val" style="color:var(--tcs)">30%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. VOLUME DISTRIBUTION (Grouped Bar) -->
+  <div class="card col-3">
+    <div class="card-head">
+      <div class="card-title">Volume Distribution</div>
+      <span class="card-badge">Bar</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="c2"></canvas>
+    </div>
+  </div>
+
+  <!-- 3. MOVING AVERAGE TREND (Line) -->
+  <div class="card col-6">
+    <div class="card-head">
+      <div class="card-title">Moving Average Trend</div>
+      <span class="card-badge">Line</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="c3"></canvas>
+    </div>
+  </div>
+
+  <!-- 4. OPENING vs CLOSING (Horizontal grouped bar) -->
+  <div class="card col-4">
+    <div class="card-head">
+      <div class="card-title">Opening vs Closing Price</div>
+      <span class="card-badge">Bar</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="c4"></canvas>
+    </div>
+  </div>
+
+  <!-- 5. YEARLY PRICE CHANGE (Area line) -->
+  <div class="card col-5">
+    <div class="card-head">
+      <div class="card-title">Yearly Price Change Trend</div>
+      <span class="card-badge">Area</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="c5"></canvas>
+    </div>
+  </div>
+
+  <!-- 6. AVERAGE PRICE BY COMPANY (Treemap-style) -->
+  <div class="card col-3">
+    <div class="card-head">
+      <div class="card-title">Average Price by Company</div>
+      <span class="card-badge">Treemap</span>
+    </div>
+    <div class="treemap">
+      <div class="tm-cell big" style="background: linear-gradient(135deg, #1A4A8A, #3B9EE8);">
+        <div class="tm-name">Reliance</div>
+        <div class="tm-val">₹897</div>
+      </div>
+      <div class="tm-cell" style="background: linear-gradient(135deg, #7C2A3E, #E85C7A);">
+        <div class="tm-name">TCS</div>
+        <div class="tm-val">₹1,840</div>
+      </div>
+      <div class="tm-cell" style="background: linear-gradient(135deg, #7A5010, #F4A022);">
+        <div class="tm-name">Airtel</div>
+        <div class="tm-val">₹342</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. TRADING VOLUME TREND (Bar) -->
+  <div class="card col-4">
+    <div class="card-head">
+      <div class="card-title">Trading Volume Trend</div>
+      <span class="card-badge">Bar</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="c7"></canvas>
+    </div>
+  </div>
+
+  <!-- 8. HIGH-LOW PRICE RANGE (Area) -->
+  <div class="card col-4">
+    <div class="card-head">
+      <div class="card-title">High-Low Price Range</div>
+      <span class="card-badge">Range Area</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="c8"></canvas>
+    </div>
+  </div>
+
+  <!-- 9. CLOSING PRICE TREND (Multi-line) -->
+  <div class="card col-4">
+    <div class="card-head">
+      <div class="card-title">Closing Price Trend</div>
+      <span class="card-badge">Line</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="c9"></canvas>
+    </div>
+  </div>
+
+  <!-- 10. TOP PERFORMING YEAR -->
+  <div class="card col-4">
+    <div class="card-head">
+      <div class="card-title">Top Performing Year</div>
+      <span class="card-badge">Ranking</span>
+    </div>
+    <div class="year-table">
+      <div class="year-row">
+        <div class="year-rank">1</div>
+        <div class="year-info">
+          <div class="year-company" style="color:var(--reliance)">Reliance</div>
+          <div class="year-year">FY 2020</div>
+        </div>
+        <div class="year-bar-wrap">
+          <div class="year-bar-bg"><div class="year-bar-fill" style="width:100%;background:var(--reliance)"></div></div>
+        </div>
+        <div class="year-pct up">+187%</div>
+      </div>
+      <div class="year-row">
+        <div class="year-rank">2</div>
+        <div class="year-info">
+          <div class="year-company" style="color:var(--tcs)">TCS</div>
+          <div class="year-year">FY 2021</div>
+        </div>
+        <div class="year-bar-wrap">
+          <div class="year-bar-bg"><div class="year-bar-fill" style="width:74%;background:var(--tcs)"></div></div>
+        </div>
+        <div class="year-pct up">+138%</div>
+      </div>
+      <div class="year-row">
+        <div class="year-rank">3</div>
+        <div class="year-info">
+          <div class="year-company" style="color:var(--airtel)">Airtel</div>
+          <div class="year-year">FY 2019</div>
+        </div>
+        <div class="year-bar-wrap">
+          <div class="year-bar-bg"><div class="year-bar-fill" style="width:48%;background:var(--airtel)"></div></div>
+        </div>
+        <div class="year-pct up">+89%</div>
+      </div>
+      <div class="year-row">
+        <div class="year-rank">4</div>
+        <div class="year-info">
+          <div class="year-company" style="color:var(--tcs)">TCS</div>
+          <div class="year-year">FY 2014</div>
+        </div>
+        <div class="year-bar-wrap">
+          <div class="year-bar-bg"><div class="year-bar-fill" style="width:36%;background:var(--tcs)"></div></div>
+        </div>
+        <div class="year-pct up">+67%</div>
+      </div>
+      <div class="year-row">
+        <div class="year-rank">5</div>
+        <div class="year-info">
+          <div class="year-company" style="color:var(--reliance)">Reliance</div>
+          <div class="year-year">FY 2007</div>
+        </div>
+        <div class="year-bar-wrap">
+          <div class="year-bar-bg"><div class="year-bar-fill" style="width:28%;background:var(--reliance)"></div></div>
+        </div>
+        <div class="year-pct up">+52%</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="dash-footer">
+  AIRTEL · RELIANCE INDUSTRIES · TATA CONSULTANCY SERVICES &nbsp;·&nbsp; NSE/BSE Historical Data 1997–2022 &nbsp;·&nbsp; For Presentation Purposes
+</div>
+
+<script>
+// ── GLOBAL DEFAULTS ──
+Chart.defaults.color = '#8B949E';
+Chart.defaults.borderColor = '#30363D';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+
+const A = '#F4A022', R = '#3B9EE8', T = '#E85C7A';
+const Aa = 'rgba(244,160,34,', Ra = 'rgba(59,158,232,', Ta = 'rgba(232,92,122,';
+const years = [1997,1999,2001,2003,2005,2007,2009,2011,2013,2015,2017,2019,2021];
+
+function opts(extra={}) {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false }, tooltip:{ backgroundColor:'#1C2333', borderColor:'#30363D', borderWidth:1, titleColor:'#E6EDF3', bodyColor:'#8B949E', padding:10, cornerRadius:8 }},
+    ...extra
+  };
+}
+
+// ── 1. DONUT ──
+new Chart(document.getElementById('c1'), {
+  type:'doughnut',
+  data:{
+    labels:['Airtel','Reliance','TCS'],
+    datasets:[{ data:[28,42,30], backgroundColor:[A,R,T], borderColor:'#1C2333', borderWidth:3, hoverOffset:6 }]
+  },
+  options:{ ...opts(), cutout:'68%', plugins:{ ...opts().plugins, tooltip:{ ...opts().plugins.tooltip }}}
+});
+
+// ── 2. VOLUME DISTRIBUTION ──
+new Chart(document.getElementById('c2'), {
+  type:'bar',
+  data:{
+    labels:['<5K','5–10K','10–15K','15–20K','>20K'],
+    datasets:[
+      { label:'Airtel',    data:[120,180,210,90,40],  backgroundColor:Aa+'0.8)', borderRadius:3, borderSkipped:false },
+      { label:'Reliance',  data:[80,140,160,120,60],  backgroundColor:Ra+'0.8)', borderRadius:3, borderSkipped:false },
+      { label:'TCS',       data:[60,100,130,80,30],   backgroundColor:Ta+'0.8)', borderRadius:3, borderSkipped:false }
+    ]
+  },
+  options: opts({ scales:{ x:{ grid:{display:false}, ticks:{font:{size:10}} }, y:{ grid:{color:'rgba(48,54,61,0.6)'}, ticks:{font:{size:10}} }}})
+});
+
+// ── 3. MOVING AVERAGE TREND ──
+const maYears = [2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020,2022];
+const maA = [60,80,90,110,95,130,180,220,260,310,380,450];
+const maR = [80,100,120,400,300,500,700,850,900,1000,1400,1800];
+const maT = [null,null,null,null,500,700,900,1200,1600,2000,2600,3200];
+new Chart(document.getElementById('c3'), {
+  type:'line',
+  data:{
+    labels: maYears,
+    datasets:[
+      { label:'Airtel',   data:maA, borderColor:A, backgroundColor:Aa+'0.08)', tension:0.4, borderWidth:2, pointRadius:3, pointBackgroundColor:A, fill:true },
+      { label:'Reliance', data:maR, borderColor:R, backgroundColor:Ra+'0.08)', tension:0.4, borderWidth:2, pointRadius:3, pointBackgroundColor:R, fill:true },
+      { label:'TCS',      data:maT, borderColor:T, backgroundColor:Ta+'0.08)', tension:0.4, borderWidth:2, pointRadius:3, pointBackgroundColor:T, fill:true }
+    ]
+  },
+  options: opts({
+    plugins:{ ...opts().plugins, legend:{ display:true, position:'top', align:'end', labels:{ boxWidth:10, boxHeight:10, borderRadius:5, useBorderRadius:true, color:'#8B949E', padding:16, font:{size:11} }}},
+    scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'rgba(48,54,61,0.6)'}, ticks:{ callback:v=>'₹'+v }}}
+  })
+});
+
+// ── 4. OPENING vs CLOSING ──
+new Chart(document.getElementById('c4'), {
+  type:'bar',
+  data:{
+    labels:['Airtel','Reliance','TCS'],
+    datasets:[
+      { label:'Opening', data:[330,870,1800], backgroundColor:[Aa+'0.5)',Ra+'0.5)',Ta+'0.5)'], borderColor:[A,R,T], borderWidth:1.5, borderRadius:5, borderSkipped:false },
+      { label:'Closing', data:[342,897,1840], backgroundColor:[A,R,T], borderRadius:5, borderSkipped:false }
+    ]
+  },
+  options: opts({
+    plugins:{ ...opts().plugins, legend:{ display:true, position:'top', align:'end', labels:{ boxWidth:8, boxHeight:8, borderRadius:4, useBorderRadius:true, color:'#8B949E', padding:12, font:{size:11} }}},
+    scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'rgba(48,54,61,0.6)'}, ticks:{ callback:v=>'₹'+v }}}
+  })
+});
+
+// ── 5. YEARLY PRICE CHANGE ──
+const pcYears = [2005,2007,2009,2011,2013,2015,2017,2019,2021];
+const pcA = [0.2,0.8,-1.2,0.4,0.3,-0.8,0.6,0.9,-0.3];
+const pcR = [0.5,1.5,-1.8,0.6,0.8,-0.4,0.4,1.4,0.7];
+const pcT = [null,null,0.6,-0.5,1.1,0.2,0.8,0.5,1.3];
+new Chart(document.getElementById('c5'), {
+  type:'line',
+  data:{
+    labels: pcYears,
+    datasets:[
+      { label:'Airtel',   data:pcA, borderColor:A, backgroundColor:Aa+'0.15)', tension:0.4, borderWidth:2, fill:true, pointRadius:3, pointBackgroundColor:A },
+      { label:'Reliance', data:pcR, borderColor:R, backgroundColor:Ra+'0.15)', tension:0.4, borderWidth:2, fill:true, pointRadius:3, pointBackgroundColor:R },
+      { label:'TCS',      data:pcT, borderColor:T, backgroundColor:Ta+'0.15)', tension:0.4, borderWidth:2, fill:true, pointRadius:3, pointBackgroundColor:T }
+    ]
+  },
+  options: opts({
+    plugins:{ ...opts().plugins, legend:{ display:true, position:'top', align:'end', labels:{ boxWidth:10, boxHeight:10, borderRadius:5, useBorderRadius:true, color:'#8B949E', padding:14, font:{size:11} }}},
+    scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'rgba(48,54,61,0.6)'}, ticks:{ callback:v=>v+'K' }}}
+  })
+});
+
+// ── 7. TRADING VOLUME TREND ──
+const volYears=['1997','1999','2001','2003','2005','2007','2009','2011','2013','2015','2017','2019','2021'];
+const volA=[40,28,22,18,15,14,12,10,9,8,7,6,5];
+const volR=[2,3,4,5,6,8,7,9,6,5,7,8,9];
+const volT=[0,0,0,0,1,2,3,4,5,6,7,8,9];
+new Chart(document.getElementById('c7'), {
+  type:'bar',
+  data:{
+    labels:volYears,
+    datasets:[
+      { label:'Airtel',   data:volA, backgroundColor:Aa+'0.85)', borderRadius:3, borderSkipped:false },
+      { label:'Reliance', data:volR, backgroundColor:Ra+'0.85)', borderRadius:3, borderSkipped:false },
+      { label:'TCS',      data:volT, backgroundColor:Ta+'0.85)', borderRadius:3, borderSkipped:false }
+    ]
+  },
+  options: opts({
+    plugins:{ ...opts().plugins, legend:{ display:true, position:'top', align:'end', labels:{ boxWidth:8, boxHeight:8, borderRadius:4, useBorderRadius:true, color:'#8B949E', padding:12, font:{size:11} }}},
+    scales:{ x:{ stacked:true, grid:{display:false}, ticks:{font:{size:9}} }, y:{ stacked:true, grid:{color:'rgba(48,54,61,0.6)'}, ticks:{ callback:v=>v+'B' }}}
+  })
+});
+
+// ── 8. HIGH-LOW PRICE RANGE ──
+const hlYears=['1997','2000','2003','2006','2009','2012','2015','2018','2021'];
+const hiA=[80,100,120,180,140,200,320,480,700];
+const loA=[30,50,60,90,70,120,180,280,400];
+const hiR=[200,300,500,1500,600,900,1100,1500,2200];
+const loR=[80,120,200,400,200,400,700,900,1500];
+new Chart(document.getElementById('c8'), {
+  type:'line',
+  data:{
+    labels:hlYears,
+    datasets:[
+      { label:'Airtel High', data:hiA, borderColor:A, backgroundColor:Aa+'0.3)', borderWidth:2, tension:0.4, fill:'+1', pointRadius:2, pointBackgroundColor:A },
+      { label:'Airtel Low',  data:loA, borderColor:Aa+'0.4)', backgroundColor:Aa+'0.05)', borderWidth:1, tension:0.4, fill:false, pointRadius:2 },
+      { label:'Reliance High',data:hiR,borderColor:R, backgroundColor:Ra+'0.3)', borderWidth:2, tension:0.4, fill:'+1', pointRadius:2, pointBackgroundColor:R },
+      { label:'Reliance Low', data:loR,borderColor:Ra+'0.4)', backgroundColor:Ra+'0.05)', borderWidth:1, tension:0.4, fill:false, pointRadius:2 }
+    ]
+  },
+  options: opts({
+    plugins:{ ...opts().plugins, legend:{ display:true, position:'top', align:'end', labels:{ boxWidth:8, boxHeight:8, borderRadius:4, useBorderRadius:true, color:'#8B949E', padding:12, font:{size:11}, filter:i=>i.datasetIndex%2===0 }}},
+    scales:{ x:{ grid:{display:false}, ticks:{font:{size:9}} }, y:{ grid:{color:'rgba(48,54,61,0.6)'}, ticks:{ callback:v=>'₹'+v }}}
+  })
+});
+
+// ── 9. CLOSING PRICE TREND ──
+const cpYears=[2002,2004,2006,2008,2010,2012,2014,2016,2018,2020,2022];
+const cpA=[60,70,120,90,140,200,250,300,380,450,600];
+const cpR=[100,200,1200,600,900,1100,1200,1400,1700,2100,2500];
+const cpT=[null,null,null,600,700,900,1300,1800,2200,2700,3500];
+new Chart(document.getElementById('c9'), {
+  type:'line',
+  data:{
+    labels:cpYears,
+    datasets:[
+      { label:'Airtel',   data:cpA, borderColor:A, backgroundColor:Aa+'0.1)', borderWidth:2.5, tension:0.4, pointRadius:3, fill:true, pointBackgroundColor:A, pointHoverRadius:5 },
+      { label:'Reliance', data:cpR, borderColor:R, backgroundColor:Ra+'0.1)', borderWidth:2.5, tension:0.4, pointRadius:3, fill:true, pointBackgroundColor:R, pointHoverRadius:5 },
+      { label:'TCS',      data:cpT, borderColor:T, backgroundColor:Ta+'0.1)', borderWidth:2.5, tension:0.4, pointRadius:3, fill:true, pointBackgroundColor:T, pointHoverRadius:5 }
+    ]
+  },
+  options: opts({
+    plugins:{ ...opts().plugins, legend:{ display:true, position:'top', align:'end', labels:{ boxWidth:10, boxHeight:10, borderRadius:5, useBorderRadius:true, color:'#8B949E', padding:14, font:{size:11} }}},
+    scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'rgba(48,54,61,0.6)'}, ticks:{ callback:v=>'₹'+v }}}
+  })
+});
+</script>
+</body>
+</html>
